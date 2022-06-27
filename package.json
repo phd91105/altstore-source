@@ -1,0 +1,22 @@
+{
+  "name": "altstore-source",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/phd91105/altstore-source.git",
+  "author": "Pham Duy",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "axios": "^0.26.1",
+    "cheerio": "^1.0.0-rc.10",
+    "discord.js": "^12.5.3",
+    "express": "^4.17.3"
+  },
+  "type": "module",
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}

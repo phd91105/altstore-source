@@ -21,7 +21,7 @@ app.get("/", async (_, res) => {
     apps: [
       {
         beta: false,
-        bundleIdentifier: "com.google.ios.youtubecercube",
+        bundleIdentifier: "com.google.ios.youtube",
         developerName: "Alfhaily & Qn_",
         downloadURL,
         iconURL:

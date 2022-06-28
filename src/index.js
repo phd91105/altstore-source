@@ -38,7 +38,7 @@ app.get("/", async (_, res) => {
           "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1523.PNG",
           "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2395.PNG",
         ],
-        size: head.headers['content-length'],
+        size: +head.headers['content-length'],
         subtitle: "Cercube with extra features! Requires iOS 13.0 and later.",
         tintColor: "e22a41",
         version: downloadURL

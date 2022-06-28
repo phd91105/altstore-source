@@ -16,6 +16,7 @@ app.get("/", async (_, res) => {
         downloadURL = "https://github.com" + $(link).attr("href");
       }
     });
+  const head = await axios.head(downloadURL);
   const time = $("relative-time").attr("datetime");
   const changeLog = $('h2:contains("Changelog")').next('ul').text().trim();
   return res.status(200).json({
@@ -37,7 +38,7 @@ app.get("/", async (_, res) => {
           "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1523.PNG",
           "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2395.PNG",
         ],
-        size: 101187584,
+        size: head.headers['content-length'],
         subtitle: "Cercube with extra features! Requires iOS 13.0 and later.",
         tintColor: "e22a41",
         version: downloadURL
@@ -46,15 +47,11 @@ app.get("/", async (_, res) => {
           .split("-")[0]
           .replace("v", ""),
         versionDate: time,
-        versionDescription: `Changelog ${downloadURL.split("/").reverse()[1].split("-")[0]
-          } (${downloadURL.split("/").reverse()[1].split("-")[1]
-          }): \n${changeLog}`,
+        versionDescription: changeLog,
       },
     ],
     identifier: "com.qn.altstorerepo",
     name: "Qn_'s AltStore Repo",
-    news: [],
-    userInfo: {},
   });
 });
 

@@ -17,6 +17,7 @@ app.get("/", async (_, res) => {
       }
     });
   const time = $("relative-time").attr("datetime");
+  const changeLog = $('h2:contains("Changelog")').next('ul').text().trim();
   return res.status(200).json({
     apps: [
       {
@@ -45,11 +46,9 @@ app.get("/", async (_, res) => {
           .split("-")[0]
           .replace("v", ""),
         versionDate: time,
-        versionDescription: `${
-          downloadURL.split("/").reverse()[1].split("-")[0]
-        } (${
-          downloadURL.split("/").reverse()[1].split("-")[1]
-        }): The changelog can be found at\nhttps://github.com/qnblackcat/CercubePlus/releases/latest`,
+        versionDescription: `Changelog ${downloadURL.split("/").reverse()[1].split("-")[0]
+          } (${downloadURL.split("/").reverse()[1].split("-")[1]
+          }): \n${changeLog}`,
       },
     ],
     identifier: "com.qn.altstorerepo",

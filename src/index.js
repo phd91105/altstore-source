@@ -1,60 +1,63 @@
-import express from "express";
-import * as cheerio from "cheerio";
-import axios from "axios";
+import express from 'express';
+import axios from 'axios';
+import TelegramBot from 'node-telegram-bot-api';
+import cron from 'node-cron';
 
 const app = express();
-const url = "https://github.com/qnblackcat/CercubePlus/releases/latest";
 
-app.get("/", async (_, res) => {
-  const html = await axios.get(url);
-  const $ = cheerio.load(html.data);
-  let downloadURL = "";
-  $("body")
-    .find("a")
-    .each(function (i, link) {
-      if (/^.*.ipa$/.test($(link).attr("href"))) {
-        downloadURL = "https://github.com" + $(link).attr("href");
-      }
-    });
-  const head = await axios.head(downloadURL);
-  const time = $("relative-time").attr("datetime");
-  const changeLog = $('h2:contains("Changelog")').next('ul').text().trim();
-  return res.status(200).json({
-    apps: [
-      {
-        beta: false,
-        bundleIdentifier: "com.google.ios.youtube",
-        developerName: "Alfhaily & Qn_",
-        downloadURL,
-        iconURL:
-          "https://github.com/phd91105/altstore-source/raw/master/youtube.jpg",
-        localizedDescription:
-          "Unfortunately, AltStore can not handle two applications that have the same bundle ID (uYou+ and Cercube+). I have no other choice except to modify CercubePlus's bundle ID. As a result, you won't be able to install CercubePlus directly through AltStore. You still can download the IPA like normal though.\n\nFull infomation about CercubePlus (Cercube+) is available on my Github: https://github.com/qnblackcat/CercubePlus/\n\nCredits: Please keep the Credits if you re-up CercubePlus! \n- Alfhaily for Cercube.\n- Galactic-Dev for the original iSponsorBlock, @Luewii for his fork of iSponsorBlock (which works in jailed mode).\n- PoomSmart for YouRememberCaption, YTClassicVideoQuality, YTNoCheckLocalNetwork, YTSystemAppearance, YTUHD, YouPiP and Return YouTube Dislike.\n- level3tjg for YTNoHoverCards.\n\nKnown issues:\n- Hide Cast button may not work.\n- YTUHD: Stuttering on 2K/4K videos.\n- YouPiP (iOS 14.0 - 14.4.2): due to Apple's fault, you may encounter the speedup-bug as described here. The bug also happens when you try to play multi-sources of sound at the same time. Enable Legacy PiP is a workaround. Note that Legacy PiP removes UHD quality and breaks the default video quality feature of uYou. Use it at your own risk!",
-        name: "CercubePlus (Cercube+)",
-        screenshotURLs: [
-          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1521.PNG",
-          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1522.PNG",
-          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2394.PNG",
-          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1523.PNG",
-          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2395.PNG",
-        ],
-        size: +head.headers['content-length'],
-        subtitle: "Cercube with extra features! Requires iOS 13.0 and later.",
-        tintColor: "e22a41",
-        version: downloadURL
-          .split("/")
-          .reverse()[1]
-          .split("-")[0]
-          .replace("v", ""),
-        versionDate: time,
-        versionDescription: changeLog,
-      },
-    ],
-    identifier: "com.qn.altstorerepo",
-    name: "Qn_'s AltStore Repo",
-  });
-});
+const constants = {
+  AUTH_URL: 'https://apiapp.acb.com.vn/mb/auth/tokens',
+  NOTIFY_URL: 'https://apiapp.acb.com.vn/mb/legacy/ss/cs/bankservice/v2/notifications?page=0&size=20&language=en',
+  READ_NOTIFY_URL: (id) => `https://apiapp.acb.com.vn/mb/legacy/ss/cs/bankservice/v2/notification/${id}`,
+  CLIENT_ID: 'iuSuHYVufIUuNIREV0FB9EoLn9kHsDbm',
+  TG_BOT_TOKEN: '',
+  BANK_ID: '',
+  BANK_PWD: '',
+};
 
-app.listen(process.env.PORT || 8080, () => {
-  console.log("listening on port 8080");
+const credentials = {
+  username: constants.BANK_ID,
+  password: constants.BANK_PWD,
+  clientId: constants.CLIENT_ID
+}
+
+const bot = new TelegramBot(constants.TG_BOT_TOKEN, { polling: true });
+
+const headers = {};
+
+let latestId = '';
+
+cron.schedule('*/3 * * * * *', async () => {
+  console.log('running a task every 3 second');
+  const notify = await getNotify();
+  notify.data = notify.data.filter(item => item.amount !== "0");
+  let message = notify.data[0].message.replace(/So\sdu\s\S*/, 'So du: ****.');
+  const splitMessage = message.split('.');
+  message = `${splitMessage[0].trim()}\n${splitMessage[1].trim()}\n${splitMessage[2].trim()}`;
+  if (latestId !== notify.data[0].id) {
+    console.log('sent message');
+    bot.sendMessage('', message);
+    latestId = notify.data[0].id;
+  }
+})
+
+const login = async (credentials) => {
+  const response = await axios.post(constants.AUTH_URL, credentials);
+  headers.authorization = 'bearer ' + response.data.accessToken;
+  return response;
+}
+
+const getNotify = async () => {
+  const response = await axios.get(constants.NOTIFY_URL, { headers });
+  return response.data;
+}
+
+const readNofity = async (id) => {
+  await axios.put(constants.READ_NOTIFY_URL(id), { headers });
+  return;
+}
+
+app.listen(process.env.PORT || 8080, async () => {
+  await login(credentials);
+  console.log('listening on port 8080');
 });

@@ -1,13 +1,15 @@
 import express from "express";
-import * as cheerio from "cheerio";
+import { load } from "cheerio";
 import axios from "axios";
 
 const app = express();
-const url = "https://github.com/qnblackcat/CercubePlus/releases/latest";
+const url = "https://github.com/qnblackcat/uYouPlus/";
 
 app.get("/", async (_, res) => {
-  const html = await axios.get(url);
-  const $ = cheerio.load(html.data);
+  const response = await axios.get(url + 'releases/latest');
+  const latestVersion = response.request.path.split('/').pop();
+  const html = await axios.get(url + 'releases/expanded_assets/' + latestVersion);
+  const $ = load(html.data);
   let downloadURL = "";
   $("body")
     .find("a")
@@ -18,43 +20,41 @@ app.get("/", async (_, res) => {
     });
   const head = await axios.head(downloadURL);
   const time = $("relative-time").attr("datetime");
-  const changeLog = $('h2:contains("Changelog")').next('ul').text().trim();
   return res.status(200).json({
     apps: [
       {
-        beta: false,
-        bundleIdentifier: "com.google.ios.youtube",
-        developerName: "Alfhaily & Qn_",
+        "beta": false,
+        "bundleIdentifier": "com.google.ios.youtube",
+        "developerName": "MiRO92 & Qn_",
         downloadURL,
-        iconURL:
+        "iconURL":
           "https://github.com/phd91105/altstore-source/raw/master/youtube.jpg",
-        localizedDescription:
-          "Unfortunately, AltStore can not handle two applications that have the same bundle ID (uYou+ and Cercube+). I have no other choice except to modify CercubePlus's bundle ID. As a result, you won't be able to install CercubePlus directly through AltStore. You still can download the IPA like normal though.\n\nFull infomation about CercubePlus (Cercube+) is available on my Github: https://github.com/qnblackcat/CercubePlus/\n\nCredits: Please keep the Credits if you re-up CercubePlus! \n- Alfhaily for Cercube.\n- Galactic-Dev for the original iSponsorBlock, @Luewii for his fork of iSponsorBlock (which works in jailed mode).\n- PoomSmart for YouRememberCaption, YTClassicVideoQuality, YTNoCheckLocalNetwork, YTSystemAppearance, YTUHD, YouPiP and Return YouTube Dislike.\n- level3tjg for YTNoHoverCards.\n\nKnown issues:\n- Hide Cast button may not work.\n- YTUHD: Stuttering on 2K/4K videos.\n- YouPiP (iOS 14.0 - 14.4.2): due to Apple's fault, you may encounter the speedup-bug as described here. The bug also happens when you try to play multi-sources of sound at the same time. Enable Legacy PiP is a workaround. Note that Legacy PiP removes UHD quality and breaks the default video quality feature of uYou. Use it at your own risk!",
-        name: "CercubePlus (Cercube+)",
-        screenshotURLs: [
-          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1521.PNG",
+        "localizedDescription": "uYouPlus is a modified version of uYou with some extra features! (requires iOS 14.0 and later).\n\nFull infomation about uYouPlus (uYou+) is available on my Github: https://github.com/qnblackcat/uYouPlus/\n\nCredits: Please keep the Credits if you re-up uYouPlus! \nhttps://github.com/qnblackcat/uYouPlus#credits\n\nAttention:\n- If you like the app, considering support the developers!\n- YTUHD is not stable atm. You might encounter stuttering, heat, battery drain..., especially when playing at 2160p (4K) quality. However, this should not happen if you use TrollStore.\n- Unless you're using TrollStore, deep-link (aka Open in the YouTube App) simply will not work.\n\nKnown issues:\n- uYou's issues: https://github.com/MiRO92/uYou-for-YouTube/issues\n- uYouPlus's issues: https://github.com/qnblackcat/uYouPlus",
+        "name": "uYouPlus (uYou+)",
+        "screenshotURLs": [
+          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2393.PNG",
           "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1522.PNG",
           "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2394.PNG",
           "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_1523.PNG",
-          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2395.PNG",
+          "https://raw.githubusercontent.com/qnblackcat/My-AltStore-repo/main/ScreenShot/IMG_2395.PNG"
         ],
-        size: +head.headers['content-length'],
-        subtitle: "Cercube with extra features! Requires iOS 13.0 and later.",
-        tintColor: "e22a41",
-        version: downloadURL
+        "size": +head.headers['content-length'],
+        "subtitle": "A modified version of uYou with extra features! Requires iOS 14.0 and later.",
+        "tintColor": "e85567",
+        "version": downloadURL
           .split("/")
           .reverse()[1]
           .split("-")[0]
           .replace("v", ""),
-        versionDate: time,
-        versionDescription: changeLog,
-      },
+        "versionDate": time,
+        "versionDescription": latestVersion + ": The changelog can be found at\nhttps://github.com/qnblackcat/uYouPlus/releases/latest"
+      }
     ],
     identifier: "com.qn.altstorerepo",
     name: "Qn_'s AltStore Repo",
   });
 });
 
-app.listen(process.env.PORT || 8080, () => {
-  console.log("listening on port 8080");
+app.listen(process.env.PORT || 8081, () => {
+  console.log("listening on port 8081");
 });
